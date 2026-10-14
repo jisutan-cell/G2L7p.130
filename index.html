@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logan's Shopping Secret Quiz</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', 'Malgun Gothic', sans-serif;
+            background: linear-gradient(135deg, #ff7675, #ffeaa7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .quiz-card {
+            background-color: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+            text-align: center;
+            max-width: 480px;
+            width: 90%;
+            border: 3px solid #2d3436;
+        }
+        /* 옷가게 & 영수증 컨셉의 상단 그래픽 */
+        .shop-banner {
+            width: 100%;
+            height: 130px;
+            background-color: #2d3436;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+        .shopping-bag {
+            font-size: 60px;
+            animation: swing 2.5s infinite ease-in-out;
+        }
+        h2 { color: #2d3436; font-size: 24px; margin: 5px 0; font-weight: 800; }
+        .subtitle { font-size: 14px; color: #636e72; margin-bottom: 15px; }
+        
+        .question-box {
+            background-color: #f5f6fa;
+            padding: 22px;
+            border-radius: 12px;
+            font-size: 19px;
+            font-weight: bold;
+            color: #2f3542;
+            min-height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 15px 0;
+            border: 2px dashed #b2bec3;
+            line-height: 1.4;
+        }
+        .btn-container {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        .btn {
+            width: 47%;
+            padding: 15px;
+            font-size: 30px;
+            font-weight: 900;
+            border: 2px solid #2d3436;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.1s;
+            color: white;
+        }
+        .btn-true { background-color: #00b894; box-shadow: 0 5px #00b89433, 4px 4px 0px #2d3436; }
+        .btn-true:hover { background-color: #55efc4; }
+        .btn-false { background-color: #d63031; box-shadow: 0 5px #d6303133, 4px 4px 0px #2d3436; }
+        .btn-false:hover { background-color: #ff7675; }
+        .btn:active { transform: translate(3px, 3px); box-shadow: none; }
+        
+        .feedback {
+            margin-top: 20px;
+            font-size: 20px;
+            font-weight: bold;
+            min-height: 45px;
+            line-height: 1.4;
+        }
+        .score-board {
+            margin-top: 20px;
+            font-size: 15px;
+            color: #2d3436;
+            background-color: #ffeaa7;
+            padding: 6px 12px;
+            border-radius: 20px;
+            display: inline-block;
+            font-weight: bold;
+        }
+        @keyframes swing {
+            0%, 100% { transform: rotate(-8deg); }
+            50% { transform: rotate(8deg); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="quiz-card">
+    <div class="shop-banner">
+        <div class="shopping-bag">🛍️✨</div>
+    </div>
+    
+    <h2>LOGAN'S SHOPPING SECRET</h2>
+    <div class="subtitle">교과서 본문 내용 파악 T/F 퀴즈</div>
+    
+    <div class="question-box" id="question-text">Loading...</div>
+    
+    <div class="btn-container" id="game-buttons">
+        <button class="btn btn-true" onclick="handleAnswer(true)">O</button>
+        <button class="btn btn-false" onclick="handleAnswer(false)">X</button>
+    </div>
+    
+    <div class="feedback" id="feedback-text"></div>
+    <div class="score-board" id="score-text">문제 로딩 중...</div>
+</div>
+
+<script>
+    // 💡 중2 학생들이 헷갈리기 쉬운 본문 낚시 문항으로 구성
+    const quizQuestions = [
+        { q: "Logan found a nice T-shirt that he really liked.", a: true, comment: "정답! 첫눈에 마음에 드는 티셔츠를 발견했죠! 😍" },
+        { q: "The original price of the T-shirt was 30 dollars.", a: false, comment: "원래 가격은 40달러(forty dollars)였어요! 🏷️" },
+        { q: "Logan bought the T-shirt on the first day he saw it.", a: false, comment: "다음 날(the next day) 세일하는 것을 보고 샀어요! 🗓️" },
+        { q: "The store crossed out 40 dollars and wrote 30 dollars.", a: true, comment: "정답! 가격을 지우고(crossed out) 30달러로 바꿨죠! 💸" },
+        { q: "In fact, 30 dollars is a very cheap price for a T-shirt.", a: false, comment: "본문에서 30달러도 여전히 큰돈(still a lot)이라고 했어요! 🧐" }
+    ];
+
+    let currentQ = 0;
+    let score = 0;
+
+    const qText = document.getElementById("question-text");
+    const feedbackText = document.getElementById("feedback-text");
+    const scoreText = document.getElementById("score-text");
+    const btnContainer = document.getElementById("game-buttons");
+    const character = document.querySelector(".shopping-bag");
+
+    function showQuestion() {
+        if (currentQ < quizQuestions.length) {
+            qText.innerText = `Q${currentQ + 1}. ${quizQuestions[currentQ].q}`;
+            feedbackText.innerText = "";
+            scoreText.innerText = `Progress: ${currentQ + 1} / ${quizQuestions.length} | Score: ${score}`;
+            btnContainer.style.pointerEvents = "auto";
+            character.innerText = "🛍️✨";
+        } else {
+            qText.innerText = "🎉 쇼핑의 비밀 파악 완료!";
+            btnContainer.style.display = "none";
+            feedbackText.style.color = "#00b894";
+            feedbackText.innerText = `최종 점수: ${score} / ${quizQuestions.length}`;
+            scoreText.innerText = score === quizQuestions.length ? "당신은 현명한 소비자! 👑🛒" : "본문을 조금 더 꼼꼼히 읽어봐요! 👍";
+            character.innerText = "🏪💸🎈";
+        }
+    }
+
+    function handleAnswer(userChoice) {
+        btnContainer.style.pointerEvents = "none";
+        const correctAnswer = quizQuestions[currentQ].a;
+        
+        if (userChoice === correctAnswer) {
+            feedbackText.style.color = "#00b894";
+            feedbackText.innerText = "정답입니다! 호갱 탈출! ⭕";
+            character.innerText = "🤑🛍️🎉";
+            score++;
+        } else {
+            feedbackText.style.color = "#d63031";
+            feedbackText.innerText = `틀렸습니다! ❌\n(${quizQuestions[currentQ].comment})`;
+            character.innerText = "💸😭💦";
+        }
+
+        currentQ++;
+        // 학생들이 피드백 문구를 읽을 수 있도록 3초 후 다음 문제로 이동
+        setTimeout(showQuestion, 3000);
+    }
+
+    showQuestion();
+</script>
+
+</body>
+</html>
